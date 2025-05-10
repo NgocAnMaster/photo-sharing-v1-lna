@@ -1,12 +1,12 @@
-import React, { useEffect, useState, useContext } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardMedia from '@mui/material/CardMedia';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import models from '../../modelData/models';
-import { AppContext } from '../../context';
+import React, { useEffect, useState, useContext } from "react";
+import { Link, useParams } from "react-router-dom";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import CardMedia from "@mui/material/CardMedia";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import fetchModel from "../../lib/fetchModelData";
+import { AppContext } from "../../context";
 
 function formatDate(dateStr) {
   return new Date(dateStr).toLocaleString();
@@ -15,19 +15,24 @@ function formatDate(dateStr) {
 function UserPhotos() {
   const { userId } = useParams();
   const [photos, setPhotos] = useState([]);
+  const [user, setUser] = useState(null);
   const [index, setIndex] = useState(0);
   const { advancedFeatures, setContextInfo } = useContext(AppContext);
 
   useEffect(() => {
-    const userPhotos = models.photoOfUserModel(userId);
-    setPhotos(userPhotos);
-    if (userPhotos.length > 0) {
-      const user = models.userModel(userPhotos[0].user_id);
-      setContextInfo(`Photos of ${user.first_name} ${user.last_name}`);
-    }
+    // Fetch user details
+    fetchModel(`/user/${userId}`).then((userData) => {
+      setUser(userData);
+      setContextInfo(`Photos of ${userData.first_name} ${userData.last_name}`);
+    });
+
+    // Fetch user photos
+    fetchModel(`/photo/photosOfUser/${userId}`).then((photoData) => {
+      setPhotos(photoData);
+    });
   }, [userId, setContextInfo]);
 
-  if (!photos.length) return null;
+  if (!user || !photos.length) return null;
 
   const currentPhotos = advancedFeatures ? [photos[index]] : photos;
 
@@ -51,7 +56,8 @@ function UserPhotos() {
                   <Typography variant="body2">
                     <Link to={`/users/${comment.user._id}`}>
                       {comment.user.first_name} {comment.user.last_name}
-                    </Link> commented at {formatDate(comment.date_time)}
+                    </Link>{" "}
+                    commented at {formatDate(comment.date_time)}
                   </Typography>
                   <Typography>{comment.comment}</Typography>
                 </Card>
@@ -66,7 +72,7 @@ function UserPhotos() {
       ))}
 
       {advancedFeatures && (
-        <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
+        <div style={{ marginTop: "20px", display: "flex", gap: "10px" }}>
           <Button
             variant="contained"
             onClick={() => setIndex(index - 1)}

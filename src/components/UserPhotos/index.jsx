@@ -20,13 +20,11 @@ function UserPhotos() {
   const { advancedFeatures, setContextInfo } = useContext(AppContext);
 
   useEffect(() => {
-    // Fetch user details
     fetchModel(`/user/${userId}`).then((userData) => {
       setUser(userData);
       setContextInfo(`Photos of ${userData.first_name} ${userData.last_name}`);
     });
 
-    // Fetch user photos
     fetchModel(`/photo/photosOfUser/${userId}`).then((photoData) => {
       setPhotos(photoData);
     });
@@ -39,36 +37,42 @@ function UserPhotos() {
   return (
     <div>
       {currentPhotos.map((photo) => (
-        <Card key={photo._id} sx={{ mt: 2 }}>
-          <CardMedia
-            component="img"
-            height="400"
-            image={`/images/${photo.file_name}`}
-            alt="User uploaded content"
-          />
-          <CardContent>
-            <Typography variant="subtitle2">
-              Uploaded: {formatDate(photo.date_time)}
-            </Typography>
-            {photo.comments && photo.comments.length > 0 ? (
-              photo.comments.map((comment) => (
-                <Card key={comment._id} sx={{ mt: 1, p: 1 }}>
-                  <Typography variant="body2">
-                    <Link to={`/users/${comment.user._id}`}>
-                      {comment.user.first_name} {comment.user.last_name}
-                    </Link>{" "}
-                    commented at {formatDate(comment.date_time)}
-                  </Typography>
-                  <Typography>{comment.comment}</Typography>
-                </Card>
-              ))
-            ) : (
-              <Typography variant="body2" sx={{ mt: 1 }}>
-                No comments.
+        <Link
+          key={photo._id}
+          to={`/photo/${photo._id}`}
+          style={{ textDecoration: "none", color: "inherit" }}
+        >
+          <Card sx={{ mt: 2, cursor: "pointer" }}>
+            <CardMedia
+              component="img"
+              height="400"
+              image={`${process.env.REACT_APP_API_URL}/images/${photo.file_name}`}
+              alt="User uploaded content"
+            />
+            <CardContent>
+              <Typography variant="subtitle2">
+                Uploaded: {formatDate(photo.date_time)}
               </Typography>
-            )}
-          </CardContent>
-        </Card>
+              {photo.comments && photo.comments.length > 0 ? (
+                photo.comments.map((comment) => (
+                  <Card key={comment._id} sx={{ mt: 1, p: 1 }}>
+                    <Typography variant="body2">
+                      <Link to={`/users/${comment.user._id}`}>
+                        {comment.user.first_name} {comment.user.last_name}
+                      </Link>{" "}
+                      commented at {formatDate(comment.date_time)}
+                    </Typography>
+                    <Typography>{comment.comment}</Typography>
+                  </Card>
+                ))
+              ) : (
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  No comments.
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
+        </Link>
       ))}
 
       {advancedFeatures && (

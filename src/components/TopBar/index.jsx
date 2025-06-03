@@ -1,40 +1,34 @@
-import React, { useContext } from 'react';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import Switch from '@mui/material/Switch';
-import { Link } from 'react-router-dom';
-import { AppContext } from '../../context';
+import React from "react";
+import { AppBar, Toolbar, Typography, Button } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
-function TopBar() {
-  const { contextInfo, advancedFeatures, setAdvancedFeatures } = useContext(AppContext);
-
-  const handleToggle = () => {
-    setAdvancedFeatures(!advancedFeatures);
-  };
+const TopBar = ({ currentUser, onLogout }) => {
+  const navigate = useNavigate();
 
   return (
-    <AppBar position="absolute">
-      <Toolbar style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Typography variant="h6" color="inherit">
-          Lê Ngọc An
+    <AppBar position="fixed">
+      <Toolbar>
+        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          Photo Sharing App
         </Typography>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <Typography variant="subtitle1" color="inherit">
-            {contextInfo}
-          </Typography>
-          <Switch
-            checked={advancedFeatures}
-            onChange={handleToggle}
-            color="default"
-          />
-          <Typography variant="caption" color="inherit">
-            Enable Advanced Features
-          </Typography>
-        </div>
+        {currentUser ? (
+          <>
+            <Typography variant="body1" sx={{ marginRight: 2 }}>
+              Hi {currentUser.first_name}
+            </Typography>
+            <Button color="inherit" onClick={() => navigate("/photo/upload")}>
+              Add Photo
+            </Button>
+            <Button color="inherit" onClick={onLogout}>
+              Logout
+            </Button>
+          </>
+        ) : (
+          <Typography variant="body1">Please Login</Typography>
+        )}
       </Toolbar>
     </AppBar>
   );
-}
+};
 
 export default TopBar;

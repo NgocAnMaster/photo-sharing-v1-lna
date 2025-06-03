@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import fetchModel from "../../lib/fetchModelData";
-import "./styles.css"; // Optional: move to external CSS if needed
+import { AppContext } from "../../context";
+import "./styles.css";
 
 function formatDate(dateStr) {
   return new Date(dateStr).toLocaleString();
@@ -10,12 +11,48 @@ function formatDate(dateStr) {
 const PhotoDetailView = () => {
   const { photoId } = useParams();
   const [photo, setPhoto] = useState(null);
+  const { currentUser } = useContext(AppContext);
+  const [newComment, setNewComment] = useState("");
+  const [error, setError] = useState("");
+  const { contextInfo } = useContext(AppContext);
 
-  useEffect(() => {
+  const fetchPhoto = () => {
     fetchModel(`/photo/${photoId}`)
       .then(setPhoto)
       .catch((err) => console.error("Error loading photo:", err));
+  };
+
+  useEffect(() => {
+    fetchPhoto();
   }, [photoId]);
+
+  const handleAddComment = async () => {
+    if (!newComment.trim()) {
+      setError("Comment cannot be empty.");
+      return;
+    }
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/photo/commentsOfPhoto/${photoId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ comment: newComment }),
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        setError(err.error || "Failed to add comment");
+        return;
+      }
+      setNewComment("");
+      setError("");
+      fetchPhoto();
+    } catch (e) {
+      setError("Failed to add comment.");
+      console.error(e);
+    }
+  };
 
   if (!photo) return <div>Loading photo...</div>;
 
@@ -23,12 +60,12 @@ const PhotoDetailView = () => {
     <div className="photo-detail-view">
       <div className="photo-container">
         <img
-          src={`/images/${photo.file_name}`}
+          src={`${process.env.REACT_APP_API_URL}/images/${photo.file_name}`}
           alt="User uploaded"
           className="photo-image"
         />
         <div className="photo-date">
-          Uploaded by{" "}
+          Uploaded by {" "}
           <strong>
             {photo.user?.first_name} {photo.user?.last_name}
           </strong>{" "}
@@ -49,12 +86,27 @@ const PhotoDetailView = () => {
                 </strong>
                 : {comment.comment}
                 <br />
-                <span className="comment-date">{formatDate(comment.date_time)}</span>
+                <span className="comment-date">
+                  {formatDate(comment.date_time)}
+                </span>
               </li>
             ))}
           </ul>
         ) : (
           <div>No comments yet.</div>
+        )}
+
+        {currentUser && (
+          <div className="comment-form">
+            <h4>Add a comment:</h4>
+            <textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Write your comment here..."
+            />
+            {error && <div className="error-text">{error}</div>}
+            <button onClick={handleAddComment}>Submit</button>
+          </div>
         )}
       </div>
     </div>

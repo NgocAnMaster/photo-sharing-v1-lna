@@ -1,0 +1,197 @@
+import React, { useState, useContext } from "react";
+import {
+    Container,
+    Typography,
+    TextField,
+    Button,
+    Box,
+    Alert,
+    Paper,
+    Divider,
+} from "@mui/material";
+import axios from "axios";
+import { AppContext } from "../../context";
+import "./styles.css";
+
+const LoginRegister = () => {
+    const { setCurrentUser } = useContext(AppContext);
+    const [loginName, setLoginName] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+
+    const [regInfo, setRegInfo] = useState({
+        login_name: "",
+        password: "",
+        confirmPassword: "",
+        first_name: "",
+        last_name: "",
+        location: "",
+        description: "",
+        occupation: "",
+    });
+    const [regError, setRegError] = useState("");
+    const [regSuccess, setRegSuccess] = useState("");
+
+    const handleLogin = async () => {
+        try {
+            const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/admin/login`, {
+                login_name: loginName,
+                password,
+            });
+            setCurrentUser(res.data);
+        } catch (err) {
+            setError("Invalid login credentials.");
+        }
+    };
+
+    const handleRegister = async () => {
+        setRegError("");
+        setRegSuccess("");
+
+        const {
+            login_name,
+            password,
+            confirmPassword,
+            first_name,
+            last_name,
+            location,
+            description,
+            occupation,
+        } = regInfo;
+
+        if (!login_name || !first_name || !last_name || !password || !confirmPassword) {
+            setRegError("All required fields must be filled in.");
+            return;
+        }
+
+        if (password.length < 8) {
+            setRegError("Password must be at least 8 characters long.");
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            setRegError("Passwords do not match.");
+            return;
+        }
+
+        try {
+            const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/user`, {
+                login_name,
+                password,
+                first_name,
+                last_name,
+                location,
+                description,
+                occupation,
+            });
+            setCurrentUser(res.data);
+            setRegSuccess("Registration successful!");
+            setRegInfo({
+                login_name: "",
+                password: "",
+                confirmPassword: "",
+                first_name: "",
+                last_name: "",
+                location: "",
+                description: "",
+                occupation: "",
+            });
+        } catch (err) {
+            console.error("Registration error:", err);
+            setRegError(err.response?.data?.error || "Registration failed.");
+        }
+    };
+
+    return (
+        <Container maxWidth="sm">
+            <Paper className="login-paper" elevation={3}>
+                <Typography variant="h5" align="center" gutterBottom>
+                    Welcome to the Photo Sharing App
+                </Typography>
+                <Box display="flex" flexDirection="column" gap={2}>
+                    <TextField
+                        label="Login Name"
+                        value={loginName}
+                        onChange={(e) => setLoginName(e.target.value)}
+                        fullWidth
+                    />
+                    <TextField
+                        label="Password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        fullWidth
+                    />
+                    <Button variant="contained" color="primary" onClick={handleLogin}>
+                        Login
+                    </Button>
+                    {error && <Alert severity="error">{error}</Alert>}
+                </Box>
+
+                <Divider sx={{ my: 4 }} />
+
+                <Typography variant="h6">Register</Typography>
+                <Box display="flex" flexDirection="column" gap={2}>
+                    <TextField
+                        label="Login Name"
+                        value={regInfo.login_name}
+                        onChange={(e) => setRegInfo({ ...regInfo, login_name: e.target.value })}
+                        fullWidth
+                    />
+                    <TextField
+                        label="First Name"
+                        value={regInfo.first_name}
+                        onChange={(e) => setRegInfo({ ...regInfo, first_name: e.target.value })}
+                        fullWidth
+                    />
+                    <TextField
+                        label="Last Name"
+                        value={regInfo.last_name}
+                        onChange={(e) => setRegInfo({ ...regInfo, last_name: e.target.value })}
+                        fullWidth
+                    />
+                    <TextField
+                        label="Location"
+                        value={regInfo.location}
+                        onChange={(e) => setRegInfo({ ...regInfo, location: e.target.value })}
+                        fullWidth
+                    />
+                    <TextField
+                        label="Occupation"
+                        value={regInfo.occupation}
+                        onChange={(e) => setRegInfo({ ...regInfo, occupation: e.target.value })}
+                        fullWidth
+                    />
+                    <TextField
+                        label="Description"
+                        value={regInfo.description}
+                        onChange={(e) => setRegInfo({ ...regInfo, description: e.target.value })}
+                        fullWidth
+                        multiline
+                    />
+                    <TextField
+                        label="Password"
+                        type="password"
+                        value={regInfo.password}
+                        onChange={(e) => setRegInfo({ ...regInfo, password: e.target.value })}
+                        fullWidth
+                    />
+                    <TextField
+                        label="Confirm Password"
+                        type="password"
+                        value={regInfo.confirmPassword}
+                        onChange={(e) => setRegInfo({ ...regInfo, confirmPassword: e.target.value })}
+                        fullWidth
+                    />
+                    <Button variant="contained" color="secondary" onClick={handleRegister}>
+                        Register Me
+                    </Button>
+                    {regError && <Alert severity="error">{regError}</Alert>}
+                    {regSuccess && <Alert severity="success">{regSuccess}</Alert>}
+                </Box>
+            </Paper>
+        </Container>
+    );
+};
+
+export default LoginRegister;

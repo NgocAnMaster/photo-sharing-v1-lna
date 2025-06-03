@@ -30,7 +30,7 @@ const UserComments = () => {
                 <CardMedia
                   component="img"
                   height="140"
-                  image={`/images/${comment.file_name}`}
+                  image={`${process.env.REACT_APP_API_URL}/images/${comment.file_name}`}
                   alt="Photo thumbnail"
                 />
               </Link>
